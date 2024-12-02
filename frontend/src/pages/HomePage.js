@@ -3,6 +3,7 @@ import Layout from '../components/Layout/Layout'
 import { Form, Input, message, Modal, Select, Table, DatePicker } from 'antd'
 import axios from 'axios'
 import Spinner from '../components/Spinner'
+import moment from 'moment'
 
 axios.defaults.baseURL = 'http://localhost:8080';
 
@@ -14,38 +15,42 @@ const HomePage = () => {
     const [transactions, setTransactions] = useState([])
     const [frequency, setFrequency] = useState('7')
     const [selectedDate, setSelectedDate] = useState([]);
+    const [type, setType] = useState('all')
 
     const columns = [
         {
             title: 'Date',
             dataIndex: 'date',
-            render: (text) => <span>{new Date(text).toLocaleDateString()}</span>
+            render: (text) => <span>{text ? new Date(text).toLocaleDateString() : 'N/A'}</span>
         },
         {
             title: 'Amount',
             dataIndex: 'amount',
-            render: (text) => <span>₹{text}</span>
+            render: (text) => <span>₹{text || 0}</span>
         },
         {
             title: 'Type',
             dataIndex: 'type',
             render: (text) => (
                 <span className={`badge ${text === 'income' ? 'bg-success' : 'bg-danger'}`}>
-                    {text.toUpperCase()}
+                    {text ? text.toUpperCase() : 'N/A'}
                 </span>
             )
         },
-        { title: 'Category', dataIndex: 'category' },
-        { title: 'Description', dataIndex: 'description' },
-        { title: 'Reference', dataIndex: 'refrence' },
         {
-            title: 'Actions',
-            dataIndex: 'actions',
-            render: (_, record) => (
-                <div className="d-flex">
-                    <button className="btn btn-sm btn-danger">Delete</button>
-                </div>
-            )
+            title: 'Category',
+            dataIndex: 'category',
+            render: (text) => <span>{text || 'N/A'}</span>
+        },
+        {
+            title: 'Description',
+            dataIndex: 'description',
+            render: (text) => <span>{text || 'N/A'}</span>
+        },
+        {
+            title: 'Reference',
+            dataIndex: 'refrence',
+            render: (text) => <span>{text || 'N/A'}</span>
         }
     ]
 
@@ -64,38 +69,33 @@ const HomePage = () => {
                 }
 
                 const requestData = {
-                    userId: user._id,
-                    frequency,
-                    ...(frequency === 'custom' && selectedDate.length === 2 && {
-                        startDate: selectedDate[0].format('YYYY-MM-DD'),
-                        endDate: selectedDate[1].format('YYYY-MM-DD')
-                    })
+                    userId: user._id
                 }
-                console.log('Request payload:', requestData)
 
                 setLoading(true)
-                const res = await axios.post('/api/v1/transection/get-transection', requestData)
-                console.log('Raw API Response:', res)
-                console.log('Transaction data:', res.data)
+
+                const res = await axios.post('/api/v1/transection/get-transection', {
+                    requestData,
+                    type
+                })
+                // Handle the response data
+                const transactionData = Array.isArray(res.data) ? res.data : []
+
+                setTransactions(transactionData)
                 setLoading(false)
-                setTransactions(res.data)
 
             } catch (error) {
-                console.error('Detailed API Error:', {
-                    message: error.message,
-                    response: error.response,
-                    request: error.request
-                })
+                console.error('API Error:', error)
                 setLoading(false)
-                message.error('Failed to fetch transactions: ' + error.message)
+                message.error('Failed to fetch transactions')
             }
         }
         getAllTransection()
-    }, [frequency, selectedDate])
+    }, [type])
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'))
-        console.log('Current user:', user)
+        // console.log('Current user:', user)
     }, [])
 
     const handleSubmit = async (values) => {
@@ -111,6 +111,7 @@ const HomePage = () => {
             message.error('Failed to add transaction: ' + error.message)
         }
     }
+
     return (
         <Layout>
             {loading && <Spinner />}
@@ -152,35 +153,19 @@ const HomePage = () => {
                     <h3>Recent Transactions</h3>
                     <div className='filters'>
                         <div>
-                            <h6>Select Frequency</h6>
-                            <Select 
-                                value={frequency} 
-                                onChange={(value) => {
-                                    setFrequency(value)
-                                    if (value !== 'custom') {
-                                        setSelectedDate([])
-                                    }
-                                }}
+                            <h6>Select type</h6>
+                            <Select
+                                value={type}
+                                onChange={(values) => setType(values)}
                             >
-                                <Select.Option value="7">Last 1 week</Select.Option>
-                                <Select.Option value="30">Last 1 month</Select.Option>
-                                <Select.Option value="365">Last 1 year</Select.Option>
-                                <Select.Option value="custom">Custom Range</Select.Option>
+                                <Select.Option value="all">All</Select.Option>
+                                <Select.Option value="income">Income</Select.Option>
+                                <Select.Option value="expense">Expense</Select.Option>
                             </Select>
                         </div>
-                        
-                        {frequency === 'custom' && (
-                            <div className="custom-date-range">
-                                <h6>Select Date Range</h6>
-                                <RangePicker 
-                                    value={selectedDate}
-                                    onChange={handleDateChange}
-                                    format="YYYY-MM-DD"
-                                />
-                            </div>
-                        )}
                     </div>
                     <div className="transactions-content">
+                        <p>Total transactions: {transactions?.length || 0}</p>
                         <Table
                             columns={columns}
                             dataSource={transactions}
@@ -190,8 +175,11 @@ const HomePage = () => {
                                 pageSize: 10,
                                 position: ['bottomCenter']
                             }}
+                            locale={{
+                                emptyText: 'No transactions found'
+                            }}
                         />
-                    </div>
+                    </div> 
                 </div>
             </div>
 

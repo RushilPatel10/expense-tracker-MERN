@@ -3,39 +3,24 @@ const moment = require('moment')
 
 const getAllTransection = async (req, res) => {
     try {
-        const { frequency, startDate, endDate, userId } = req.body
+        const { userId,type } = req.body
 
-        let dateFilter = {}
+        // First, let's log a sample document to see the actual field names
+        const sampleDoc = await TransectionModel.findOne()
 
-        if (frequency === 'custom') {
-            if (!startDate || !endDate) {
-                return res.status(400).json({ 
-                    message: "Please provide both start and end dates for custom range" 
-                })
-            }
-            dateFilter = {
-                date: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }
-        } else {
-            if (!frequency) {
-                return res.status(400).json({ message: "Frequency is required" })
-            }
-            dateFilter = {
-                date: {
-                    $gte: moment().subtract(Number(frequency), "d").toDate()
-                }
-            }
-        }
-
+        // Now query with both possible field names
         const transections = await TransectionModel.find({
-            ...dateFilter,
-            userid: userId
+            $or: [
+                { userId: userId },
+                { userid: userId }
+            ],
+            userid:req.body.userid,
+            ...(type !== 'all' && {type})
         })
 
+        console.log('Found transactions:', transections)
         res.status(200).json(transections)
+        
     } catch (error) {
         console.error("Error in getAllTransection:", error)
         res.status(500).json({ message: error.message })

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useExpenses } from '../../context/ExpenseContext';
 import styled from 'styled-components';
+import { Card, Button, Input, Select, FormGroup, Label } from '../../styles/SharedStyles';
 
-const ExpenseForm = () => {
+const ExpenseForm = ({ onClose }) => {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -10,69 +11,77 @@ const ExpenseForm = () => {
     date: new Date().toISOString().split('T')[0],
     paymentMethod: 'cash'
   });
+
   const { addExpense } = useExpenses();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
-      await addExpense({
-        ...formData,
-        amount: parseFloat(formData.amount)
-      });
-      setFormData({
-        amount: '',
-        description: '',
-        category: '',
-        date: new Date().toISOString().split('T')[0],
-        paymentMethod: 'cash'
-      });
-    } catch (error) {
-      console.error('Error adding expense:', error);
+      await addExpense(formData);
+      if (onClose) onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to add expense');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <FormContainer>
-      <h2>Add New Expense</h2>
-      <Form onSubmit={handleSubmit}>
-        <InputGroup>
+    <FormCard>
+      <FormHeader>
+        <h2>Add New Expense</h2>
+        <CloseButton onClick={() => onClose && onClose()}>&times;</CloseButton>
+      </FormHeader>
+
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+
+      <form onSubmit={handleSubmit}>
+        <FormGroup>
           <Label>Amount</Label>
           <Input
             type="number"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            placeholder="Enter amount"
             required
             min="0"
             step="0.01"
           />
-        </InputGroup>
+        </FormGroup>
 
-        <InputGroup>
+        <FormGroup>
           <Label>Description</Label>
           <Input
             type="text"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Enter description"
             required
           />
-        </InputGroup>
+        </FormGroup>
 
-        <InputGroup>
+        <FormGroup>
           <Label>Category</Label>
           <Select
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             required
           >
-            <option value="">Select Category</option>
-            <option value="food">Food</option>
-            <option value="transport">Transport</option>
-            <option value="utilities">Utilities</option>
-            <option value="entertainment">Entertainment</option>
+            <option value="">Select category</option>
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Shopping">Shopping</option>
           </Select>
-        </InputGroup>
+        </FormGroup>
 
-        <InputGroup>
+        <FormGroup>
           <Label>Date</Label>
           <Input
             type="date"
@@ -80,9 +89,9 @@ const ExpenseForm = () => {
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             required
           />
-        </InputGroup>
+        </FormGroup>
 
-        <InputGroup>
+        <FormGroup>
           <Label>Payment Method</Label>
           <Select
             value={formData.paymentMethod}
@@ -90,60 +99,70 @@ const ExpenseForm = () => {
             required
           >
             <option value="cash">Cash</option>
-            <option value="credit">Credit</option>
+            <option value="credit">Credit Card</option>
+            <option value="debit">Debit Card</option>
+            <option value="upi">UPI</option>
           </Select>
-        </InputGroup>
+        </FormGroup>
 
-        <Button type="submit">Add Expense</Button>
-      </Form>
-    </FormContainer>
+        <ButtonGroup>
+          <Button type="button" $secondary onClick={() => onClose && onClose()}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Adding...' : 'Add Expense'}
+          </Button>
+        </ButtonGroup>
+      </form>
+    </FormCard>
   );
 };
 
-const FormContainer = styled.div`
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+const FormCard = styled(Card)`
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
 `;
 
-const Form = styled.form`
+const FormHeader = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    color: ${props => props.theme.text.primary};
+    font-size: 1.5rem;
+  }
 `;
 
-const InputGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const Label = styled.label`
-  font-weight: bold;
-`;
-
-const Input = styled.input`
-  padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
-
-const Select = styled.select`
-  padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
-
-const Button = styled.button`
-  padding: 0.8rem;
-  background: #28a745;
-  color: white;
+const CloseButton = styled.button`
+  background: none;
   border: none;
-  border-radius: 4px;
+  font-size: 1.5rem;
+  color: ${props => props.theme.text.secondary};
   cursor: pointer;
-  &:hover { background: #218838; }
+  padding: 0.5rem;
+  line-height: 1;
+  
+  &:hover {
+    color: ${props => props.theme.text.primary};
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+`;
+
+const ErrorMessage = styled.div`
+  color: ${props => props.theme.error.main};
+  background: ${props => props.theme.error.light}20;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
 `;
 
 export default ExpenseForm; 

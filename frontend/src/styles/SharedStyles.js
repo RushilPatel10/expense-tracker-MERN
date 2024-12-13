@@ -1,118 +1,150 @@
 import styled from 'styled-components';
 
 export const theme = {
-  primary: '#6C63FF',
-  secondary: '#4CAF50',
-  danger: '#FF5252',
-  background: '#F5F7FF',
-  text: '#2C3E50',
-  white: '#FFFFFF',
-  gray: '#95A5A6',
-  lightGray: '#ECEFF1',
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-  borderRadius: '10px',
+  primary: {
+    main: '#2563EB',
+    light: '#60A5FA',
+    dark: '#1E40AF',
+    text: '#FFFFFF'
+  },
+  secondary: {
+    main: '#059669',
+    light: '#34D399',
+    dark: '#047857',
+    text: '#FFFFFF'
+  },
+  background: {
+    default: '#F8FAFC',
+    paper: '#FFFFFF',
+    dark: '#1E293B'
+  },
+  text: {
+    primary: '#1E293B',
+    secondary: '#475569',
+    light: '#94A3B8'
+  },
+  border: {
+    light: '#E2E8F0',
+    default: '#CBD5E1'
+  },
+  error: {
+    main: '#DC2626',
+    light: '#EF4444',
+    dark: '#B91C1C'
+  },
+  success: {
+    main: '#059669',
+    light: '#34D399',
+    dark: '#047857'
+  },
+  warning: {
+    main: '#D97706',
+    light: '#FBBF24',
+    dark: '#B45309'
+  },
+  shadow: {
+    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+  }
 };
 
 export const Card = styled.div`
-  background: ${theme.white};
-  border-radius: ${theme.borderRadius};
-  box-shadow: ${theme.boxShadow};
-  padding: 2rem;
-  margin: 1rem 0;
+  background: ${props => props.theme.background.paper};
+  border-radius: 12px;
+  box-shadow: ${props => props.theme.shadow.md};
+  padding: 1.5rem;
 `;
 
 export const Button = styled.button`
-  background: ${props => props.$secondary ? props.theme.white : props.theme.primary};
-  color: ${props => props.$secondary ? props.theme.primary : props.theme.white};
-  padding: 0.8rem 1.5rem;
-  border: 2px solid ${props => props.theme.primary};
-  border-radius: 25px;
-  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  background: ${props => props.$secondary ? props.theme.background.paper : props.theme.primary.main};
+  color: ${props => props.$secondary ? props.theme.text.primary : props.theme.primary.text};
+  border: 2px solid ${props => props.$secondary ? props.theme.border.default : props.theme.primary.main};
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadow.md};
+    background: ${props => props.$secondary ? props.theme.background.default : props.theme.primary.dark};
   }
 
   &:disabled {
-    background: ${props => props.theme.gray};
-    border-color: ${props => props.theme.gray};
+    opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
   }
 `;
 
 export const Input = styled.input`
   width: 100%;
-  padding: 0.8rem 1rem;
-  border: 2px solid ${theme.lightGray};
+  padding: 0.75rem 1rem;
+  border: 2px solid ${props => props.theme.border.default};
   border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
+  font-size: 0.875rem;
+  color: ${props => props.theme.text.primary};
+  background: ${props => props.theme.background.paper};
+  transition: all 0.2s ease;
 
   &:focus {
-    border-color: ${theme.primary};
     outline: none;
+    border-color: ${props => props.theme.primary.main};
+    box-shadow: 0 0 0 3px ${props => props.theme.primary.light}30;
+  }
+
+  &::placeholder {
+    color: ${props => props.theme.text.light};
   }
 `;
 
 export const Select = styled.select`
   width: 100%;
-  padding: 0.8rem 1rem;
-  border: 2px solid ${theme.lightGray};
+  padding: 0.75rem 1rem;
+  border: 2px solid ${props => props.theme.border.default};
   border-radius: 8px;
-  font-size: 1rem;
-  background: ${theme.white};
+  font-size: 0.875rem;
+  color: ${props => props.theme.text.primary};
+  background: ${props => props.theme.background.paper};
   cursor: pointer;
+  transition: all 0.2s ease;
 
   &:focus {
-    border-color: ${theme.primary};
     outline: none;
+    border-color: ${props => props.theme.primary.main};
+    box-shadow: 0 0 0 3px ${props => props.theme.primary.light}30;
   }
 `;
 
-export const PageContainer = styled.div`
-  min-height: 100vh;
-  background: ${theme.background};
-  padding: 2rem;
+export const Label = styled.label`
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: ${props => props.theme.text.primary};
+  font-size: 0.875rem;
 `;
 
-export const FormContainer = styled(Card)`
-  max-width: 500px;
-  margin: 2rem auto;
-`;
-
-export const Title = styled.h1`
-  color: ${theme.text};
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2rem;
-`;
-
-export const Subtitle = styled.h2`
-  color: ${theme.text};
+export const FormGroup = styled.div`
   margin-bottom: 1.5rem;
-  font-size: 1.5rem;
 `;
 
-export const ErrorMessage = styled.div`
-  color: ${theme.danger};
-  padding: 0.5rem;
-  margin: 0.5rem 0;
-  font-size: 0.9rem;
+export const PageTitle = styled.h1`
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: ${props => props.theme.text.primary};
+  margin-bottom: 1.5rem;
 `;
 
-export const FlexContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-`;
-
-export const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin: 2rem 0;
+export const PageContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 `; 

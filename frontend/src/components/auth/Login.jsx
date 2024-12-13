@@ -1,106 +1,123 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
-import {
-  PageContainer,
-  FormContainer,
-  Title,
-  Input,
-  Button,
-  ErrorMessage,
-} from '../../styles/SharedStyles';
 import styled from 'styled-components';
+import { Card, Button, Input, FormGroup, Label } from '../../styles/SharedStyles';
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        login(data.user, data.token);
-      } else {
-        setError(data.error || 'Login failed');
-      }
-    } catch (error) {
-      setError('An error occurred during login');
+      await login(formData);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Failed to login');
     }
   };
 
   return (
-    <PageContainer>
-      <FormContainer>
-        <Title>Welcome Back!</Title>
+    <AuthContainer>
+      <AuthCard>
+        <AuthHeader>
+          <Logo>ExpenseTracker</Logo>
+          <Subtitle>Welcome back! Please login to your account.</Subtitle>
+        </AuthHeader>
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
         <form onSubmit={handleSubmit}>
-          <InputGroup>
+          <FormGroup>
             <Label>Email</Label>
             <Input
               type="email"
-              placeholder="Enter your email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="Enter your email"
               required
             />
-          </InputGroup>
+          </FormGroup>
 
-          <InputGroup>
+          <FormGroup>
             <Label>Password</Label>
             <Input
               type="password"
-              placeholder="Enter your password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Enter your password"
               required
             />
-          </InputGroup>
+          </FormGroup>
 
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-
-          <Button type="submit" style={{ width: '100%', marginTop: '1rem' }}>
+          <Button type="submit" style={{ width: '100%' }}>
             Login
           </Button>
-
-          <SignupLink>
-            Don't have an account? <Link to="/signup">Sign up</Link>
-          </SignupLink>
         </form>
-      </FormContainer>
-    </PageContainer>
+
+        <AuthFooter>
+          Don't have an account? <Link to="/signup">Sign up</Link>
+        </AuthFooter>
+      </AuthCard>
+    </AuthContainer>
   );
 };
 
-const InputGroup = styled.div`
-  margin-bottom: 1.5rem;
+const AuthContainer = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: ${props => props.theme.background.default};
 `;
 
-const Label = styled.label`
-  display: block;
-  margin-bottom: 0.5rem;
-  color: ${props => props.theme.text};
-  font-weight: 500;
+const AuthCard = styled(Card)`
+  width: 100%;
+  max-width: 400px;
 `;
 
-const SignupLink = styled.p`
+const AuthHeader = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+`;
+
+const Logo = styled.h1`
+  color: ${props => props.theme.primary.main};
+  font-size: 2rem;
+  margin-bottom: 1rem;
+`;
+
+const Subtitle = styled.p`
+  color: ${props => props.theme.text.secondary};
+`;
+
+const ErrorMessage = styled.div`
+  color: ${props => props.theme.error.main};
+  background: ${props => props.theme.error.light}20;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+`;
+
+const AuthFooter = styled.div`
   text-align: center;
   margin-top: 1.5rem;
-  color: ${props => props.theme.gray};
+  color: ${props => props.theme.text.secondary};
 
   a {
-    color: ${props => props.theme.primary};
-    text-decoration: none;
-    font-weight: 600;
-
+    color: ${props => props.theme.primary.main};
+    font-weight: 500;
+    
     &:hover {
-      text-decoration: underline;
+      color: ${props => props.theme.primary.dark};
     }
   }
 `;

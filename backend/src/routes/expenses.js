@@ -120,4 +120,57 @@ router.get('/statistics', auth, async (req, res) => {
   }
 });
 
+// Update expense
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const expense = await Expense.findOneAndUpdate(
+      { _id: req.params.id, user: req.userId },
+      req.body,
+      { new: true }
+    );
+    
+    if (!expense) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+    
+    res.json(expense);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete expense
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const expense = await Expense.findOneAndDelete({
+      _id: req.params.id,
+      user: req.userId
+    });
+    
+    if (!expense) {
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+    
+    res.json({ message: 'Expense deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Bulk delete expenses
+router.post('/bulk-delete', auth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    await Expense.deleteMany({
+      _id: { $in: ids },
+      user: req.userId
+    });
+    
+    res.json({ message: 'Expenses deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 export default router; 
